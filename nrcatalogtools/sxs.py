@@ -17,6 +17,7 @@ class SXSCatalog(catalog.CatalogBase):
         extrap_key = f"Extrapolated_N{extrapolation_order}.dir"
         raw_obj = sxs.load(f"{sim_name}/Lev/rhOverM")
         raw_obj = raw_obj.get(extrap_key)
+        print(type(raw_obj))
         return waveform.WaveformModes(raw_obj.data, **raw_obj._metadata)
 
     def get_metadata(self, sim_name):

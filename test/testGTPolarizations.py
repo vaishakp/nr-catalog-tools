@@ -18,7 +18,7 @@ home = Path.home()
 libpath = f"{cwd}/../"
 
 if libpath not in sys.path:
-	sys.path.append(libpath)
+    sys.path.append(libpath)
 
 import unittest
 from pathlib import Path
@@ -38,7 +38,7 @@ from pycbc.types.timeseries import TimeSeries
 # waveformtools
 from waveformtools.waveforms import modes_array
 from waveformtools.waveformtools import (interp_resam_wfs, message,
-										 xtract_camp_phase)
+                                         xtract_camp_phase)
 
 # unittest helper funcs
 from helper import *
@@ -63,305 +63,332 @@ message(f"Simulation {sim_name}")
 
 
 def GetPolarizations(M, D, inc, coa_phase, delta_t):
-	"""Get the polarizations from extrinsic 
-	parameters.
+    """Get the polarizations from extrinsic 
+    parameters.
 
-	Parameters
-	----------
-	M: float
-	   The total mass in solar mass units.
-	D: float
-	   The distance to the binary
-	   in Mpc.
-	inclination : float
-				  Inclination angle in radians.
-				  [0, :math:`\pi`]
-	phi_ref : float
-			  The reference orbital phase in radians 
-			  [0, 2:math:`\pi`]
-	delta_t : float
-			  The sampling time step.
-	Returns
-	-------
-	hp, hx : 1d array
-			 The waveform polarizations
-	"""
+    Parameters
+    ----------
+    M: float
+       The total mass in solar mass units.
+    D: float
+       The distance to the binary
+       in Mpc.
+    inclination : float
+                  Inclination angle in radians.
+                  [0, :math:`\pi`]
+    phi_ref : float
+              The reference orbital phase in radians 
+              [0, 2:math:`\pi`]
+    delta_t : float
+              The sampling time step.
+    Returns
+    -------
+    hp, hx : 1d array
+             The waveform polarizations
+    """
 
-	###############################
-	# Prepare waveform using nrcat
-	###############################
+    ###############################
+    # Prepare waveform using nrcat
+    ###############################
 
-	errs = {}
+    errs = {}
 
-	aerrs = []
-	perrs = []
+    aerrs = []
+    perrs = []
 
-	#sc = sxs.Catalog.load(download=True)
-	#rc = RITCatalog.load(verbosity=5, download=True)
-	mc = MayaCatalog.load(verbosity=5)
+    #sc = sxs.Catalog.load(download=True)
+    #rc = RITCatalog.load(verbosity=5, download=True)
+    mc = MayaCatalog.load(verbosity=5)
 
-	mwf = mc.get(sim_name)
+    mwf = mc.get(sim_name)
 
-	hpc = mwf.get_td_waveform(total_mass=M, distance=D, inclination=inc,
-						coa_phase=coa_phase, delta_t=delta_t
-						)
+    hpc = mwf.get_td_waveform(total_mass=M, distance=D, inclination=inc,
+                        coa_phase=coa_phase, delta_t=delta_t
+                        )
 
-	hp1, hx1 = hpc.real(), hpc.imag()
-	t1 = hp1.sample_times
-	
-	# Recenter 
-	maxtime = t1[np.argmax(np.absolute(hpc))]
-	t1 = t1-maxtime
+    hp1, hx1 = hpc.real(), -hpc.imag()
+    t1 = hp1.sample_times
+    
+    # Recenter 
+    maxtime = t1[np.argmax(np.absolute(hpc))]
+    t1 = t1-maxtime
 
-	##############################
-	# Prepare waveform using lal
-	##############################
+    ##############################
+    # Prepare waveform using lal
+    ##############################
 
-	fdir = maya_catalog_info['cache_dir']
-	dfile = f'{fdir}/data/{sim_name}.h5'
-
-
-	#file = f'/home/vaishakprasad/{sim_name}.h5'
-	# Check by changing spin by small amount
-	#dspins2x = np.linspace(-0.1, 0.1, 1000)
-
-	try:
-		f.close()
-	except:
-		pass
-
-	# Extrinsic parameters:
-	f_lower = 20
-	f_lower_at_1MSUN = f_lower/M
-
-	f = h5py.File(dfile, 'a')
-	if 'f_lower_at_1MSUN' not in list(f.attrs.keys()):
-		
-		f.attrs['f_lower_at_1MSUN'] = f_lower_at_1MSUN
-		f.close()
-	else:
-		f.close()
-		
-	f = h5py.File(dfile, 'r')
-		
-	#print(f.attrs.keys())
-	#print(f.keys())
-	params = {}
-
-	
+    fdir = maya_catalog_info['cache_dir']
+    dfile = f'{fdir}/data/{sim_name}.h5'
 
 
-	params['f_lower'] = f_lower
-	params['mtotal'] = M#150.0
-	params['inclination'] = inc#0.0
-	params['distance'] = D#100.0
+    #file = f'/home/vaishakprasad/{sim_name}.h5'
+    # Check by changing spin by small amount
+    #dspins2x = np.linspace(-0.1, 0.1, 1000)
 
-	# Metadata parameters:
+    try:
+        f.close()
+    except:
+        pass
 
-	params['eta'] = f.attrs['eta']
+    # Extrinsic parameters:
+    f_lower = 20
+    f_lower_at_1MSUN = f_lower/M
 
-	params['mass1'] = pnutils.mtotal_eta_to_mass1_mass2(params['mtotal'], params['eta'])[0]
-	params['mass2'] = pnutils.mtotal_eta_to_mass1_mass2(params['mtotal'], params['eta'])[1]
+    f = h5py.File(dfile, 'a')
+    if 'f_lower_at_1MSUN' not in list(f.attrs.keys()):
+        
+        f.attrs['f_lower_at_1MSUN'] = f_lower_at_1MSUN
+        f.close()
+    else:
+        f.close()
+        
+    f = h5py.File(dfile, 'r')
+        
+    #message(f.attrs.keys())
+    #message(f.keys())
+    params = {}
 
-	# BH1 spins
-	params['spin1x'] = f.attrs['spin1x']
-	params['spin1y'] = f.attrs['spin1y']
-	params['spin1z'] = f.attrs['spin1z']
-
-
-	# BH2 spins
-
-	params['spin2x'] = f.attrs['spin2x']
-	params['spin2y'] = f.attrs['spin2y']
-	params['spin2z'] = f.attrs['spin2z']
-
-
-	# Spin unit vectors
-
-	params['nhat'] = [f.attrs['nhatx'], f.attrs['nhaty'], f.attrs['nhatz']]
-	params['lnhat'] = [f.attrs['LNhatx'], f.attrs['LNhaty'], f.attrs['LNhatz']]
-
-
-	# Check for coa_phase, else use the phase from nr cat load.
-	try:
-		params['coa_phase'] = f.attrs['coa_phase']
-	except:
-		print(f'Cannot find the attribute `coa_phase` in the file. Setting to {coa_phase}')
-		#raise AttributeError('Cannot find the attribute `coa_phase` in the file')
-		params['coa_phase']=coa_phase
-
-	# Transform spins
-
-	# NR frame
-	s1 = [params['spin1x'], params['spin1y'], params['spin1z']]
-	s2 = [params['spin2x'], params['spin2y'], params['spin2z']]
-
-	# LAL frame
-	S1, S2 = TransformSpinsNRtoLAL(s1, s2, params['nhat'], params['lnhat'])
-
-	from pycbc.waveform import get_td_waveform
+    
 
 
-	print('Loading waveform')
-	hp2, hx2 = get_td_waveform(approximant='NR_hdf5',
-							 numrel_data=dfile,
-							 mass1=params['mass1'],
-							 mass2=params['mass2'],
-							 spin1x=S1[0],
-							 spin1y=S1[1],
-							 spin1z=S1[2],
-							 spin2x=S2[0],
-							 spin2y=S2[1],
-							 spin2z=S2[2],
-							 delta_t=delta_t,
-							 f_lower=f_lower,
-							 inclination=params['inclination'],
-							 coa_phase=params['coa_phase'],
-							 distance=params['distance'])
+    params['f_lower'] = f_lower
+    params['mtotal'] = M#150.0
+    params['inclination'] = inc#0.0
+    params['distance'] = D#100.0
 
-	f.close()
+    # Metadata parameters:
 
-	#
-	t2 = np.array(range( len(hp2) ) )*delta_t
-	
-	maxtime = t2[np.argmax(np.absolute(hp2+1j*hx2))]
-	t2 = t2 - maxtime
-	
-	#pyplot.figure()
-	plt.plot(t1, hp1, color=[0,0.7071,1], label='nrcat')
-	plt.plot(t2, hp2, color=[0.1,0,0], linestyle='--', label='lal')
-	plt.legend()
-	plt.grid()
-	plt.show()
-	
-	waveforms = {
-		"wf1p": hp1,
-		"wf1x": hx1,
-		"wf2p": hp2,
-		"wf2x": hx2,
-	}
+    params['eta'] = f.attrs['eta']
 
-	return waveforms
+    params['mass1'] = pnutils.mtotal_eta_to_mass1_mass2(params['mtotal'], params['eta'])[0]
+    params['mass2'] = pnutils.mtotal_eta_to_mass1_mass2(params['mtotal'], params['eta'])[1]
+
+    # BH1 spins
+    params['spin1x'] = f.attrs['spin1x']
+    params['spin1y'] = f.attrs['spin1y']
+    params['spin1z'] = f.attrs['spin1z']
+
+
+    # BH2 spins
+
+    params['spin2x'] = f.attrs['spin2x']
+    params['spin2y'] = f.attrs['spin2y']
+    params['spin2z'] = f.attrs['spin2z']
+
+
+    # Spin unit vectors
+
+    params['nhat'] = [f.attrs['nhatx'], f.attrs['nhaty'], f.attrs['nhatz']]
+    params['lnhat'] = [f.attrs['LNhatx'], f.attrs['LNhaty'], f.attrs['LNhatz']]
+
+
+    # Check for coa_phase, else use the phase from nr cat load.
+    try:
+        params['coa_phase'] = f.attrs['coa_phase']
+    except:
+        message(f'Cannot find the attribute `coa_phase` in the file. Setting to {coa_phase}')
+        #raise AttributeError('Cannot find the attribute `coa_phase` in the file')
+        params['coa_phase']=coa_phase
+
+    # Transform spins
+
+    # NR frame
+    s1 = [params['spin1x'], params['spin1y'], params['spin1z']]
+    s2 = [params['spin2x'], params['spin2y'], params['spin2z']]
+
+    # LAL frame
+    S1, S2 = TransformSpinsNRtoLAL(s1, s2, params['nhat'], params['lnhat'])
+
+    from pycbc.waveform import get_td_waveform
+
+
+    message('Loading waveform')
+    hp2, hx2 = get_td_waveform(approximant='NR_hdf5',
+                             numrel_data=dfile,
+                             mass1=params['mass1'],
+                             mass2=params['mass2'],
+                             spin1x=S1[0],
+                             spin1y=S1[1],
+                             spin1z=S1[2],
+                             spin2x=S2[0],
+                             spin2y=S2[1],
+                             spin2z=S2[2],
+                             delta_t=delta_t,
+                             f_lower=f_lower,
+                             inclination=params['inclination'],
+                             coa_phase=params['coa_phase'],
+                             distance=params['distance'])
+
+    f.close()
+    message('')
+    #
+    t2 = np.array(range( len(hp2) ) )*delta_t
+    
+    maxtime = t2[np.argmax(np.absolute(hp2+1j*hx2))]
+    t2 = t2 - maxtime
+    
+    #pyplot.figure()
+    plt.plot(t1, hp1, color=[0,0.7071,1], label='nrcat')
+    plt.plot(t2, hp2, color=[0.1,0,0], linestyle='--', label='lal')
+    plt.legend()
+    plt.grid()
+    plt.show()
+    
+
+    plt.plot(t1, hx1, color=[0,0.7071,1], label='nrcat')
+    plt.plot(t2, hx2, color=[0.1,0,0], linestyle='--', label='lal')
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+    fig, ax = plt.subplots()
+    ax.set_yscale('log')
+
+    ax.plot(t1, np.absolute(hp1-hp2), color=[0,0.7071,1], label='plus')
+    ax.plot(t2, np.absolute(hx1- hx2), color=[0.1,0,0], linestyle='--', label='cross')
+    ax.legend()
+    plt.grid()
+    plt.show()
+
+
+    
+    #hp1 = hp1/np.linalg.norm(hp1)
+    #hx1 = hx1/np.linalg.norm(hx1)
+    #hp2 = hp2/np.linalg.norm(hp2)
+    #hx2 = hx2/np.linalg.norm(hx2)
+
+
+
+    waveforms = {
+        "wf1p": hp1,
+        "wf1x": hx1,
+        "wf2p": hp2,
+        "wf2x": hx2,
+    }
+
+    return waveforms
 
 
 class TestGTPol(unittest.TestCase):
-	"""Test polarization generation of GT waveforms """
+    """Test polarization generation of GT waveforms """
 
-	def test_waveforms(self):
-		"""Test the generation of polarizations of GT waveforms against lslsuite. Tested are RMS errors,
-		maximum deviation and mismatches
-		"""
+    def test_waveforms(self):
+        """Test the generation of polarizations of GT waveforms against lslsuite. Tested are RMS errors,
+        maximum deviation and mismatches
+        """
 
-		incl_angles = [0.001, 0.3, np.pi/8, np.pi/6, np.pi/4, np.pi/2, np.pi-0.001]
-		
-		# Parameters
-		M = 40
-		D = 1000
-		phi_ref = np.pi/4
-		delta_t = 1./2048
+        incl_angles = [0.001, 0.3, np.pi/8, np.pi/6, np.pi/4, np.pi/2, np.pi-0.001]
+        phi_ref_angles = [0.001, 0.3, np.pi/8, np.pi/6, np.pi/4, np.pi/2, np.pi-0.001]
+        # Parameters
+        M = 40
+        D = 1000
+        phi_ref = np.pi/4
+        delta_t = 1./2048
 
 
-		for inclination in incl_angles:
+        for inclination in incl_angles:
+            for phi_ref in phi_ref_angles:
 
-			
-			message("\n--------------------------")
-			message(f" M={M} D={D} incl={inclination}, phi_ref={phi_ref} delta_t{delta_t}")
-			message("----------------------------")
+                message("Running tests...")         
+                message("\n--------------------------")
+                message(f" M={M} D={D} incl={inclination}, phi_ref={phi_ref} delta_t{delta_t}")
+                message("----------------------------")
 
-			waveforms = GetPolarizations(M, D, inclination, phi_ref, delta_t)
+                waveforms = GetPolarizations(M, D, inclination, phi_ref, delta_t)
 
-			wf1_p = waveforms["wf1p"]
-			wf1_x = waveforms["wf1x"]
-			wf2_p = waveforms["wf2p"]
-			wf2_x = waveforms["wf2x"]
+                wf1_p = waveforms["wf1p"]
+                wf1_x = waveforms["wf1x"]
+                wf2_p = waveforms["wf2p"]
+                wf2_x = waveforms["wf2x"]
 
-			wf1_nrcat = wf1_p + 1j * wf1_x
-			wf2_lal = wf2_p + 1j * wf2_x
+                wf1_nrcat = wf1_p + 1j * wf1_x
+                wf2_lal = wf2_p + 1j * wf2_x
 
-			# L2 errors
-			Res_p, Amin_p, Amax_p = RMSerrs(np.array(wf1_p), np.array(wf2_p))
-			Res_x, Amin_x, Amax_x = RMSerrs(np.array(wf1_x), np.array(wf2_x))
+                # L2 errors
+                Res_p, Amin_p, Amax_p = RMSerrs(np.array(wf1_p), np.array(wf2_p), Norm=False)
+                Res_x, Amin_x, Amax_x = RMSerrs(np.array(wf1_x), np.array(wf2_x), Norm=False)
 
-			# Amin_p/=A1max
-			# Amin
-			# Match
-			match_p, shift_p = match(wf1_p, wf2_p)
-			match_x, shift_x = match(wf1_x, wf2_x)
+                message(f'RMS errors (normalized) {Res_p}, Max upper deviation {Amin_p}, Max lower deviation {Amax_p}')
+                # Amin_p/=A1max
+                # Amin
+                # Match
+                match_p, shift_p = match(wf1_p, wf2_p)
+                match_x, shift_x = match(wf1_x, wf2_x)
 
-			mismatch_p = 100 * (1 - match_p)
-			mismatch_x = 100 * (1 - match_x)
+                mismatch_p = 100 * (1 - match_p)
+                mismatch_x = 100 * (1 - match_x)
 
-			max_mismatch = max(mismatch_p, mismatch_x)
+                max_mismatch = max(mismatch_p, mismatch_x)
 
-			message(f"Mismatch is {max_mismatch}")
+                message(f"Mismatch is {max_mismatch}")
 
-			prec = 2
-			# RMS error should be less than 0.01 x Amax(wf1)
-			self.assertAlmostEqual(
-				Res_p,
-				0,
-				prec,
-				f"The RMS error between the + components of the waveforms must be atmost 1e-{prec} times Max amplitude of the normalized waveform",
-			)
-			self.assertAlmostEqual(
-				Res_x,
-				0,
-				prec,
-				f"The RMS error between the x components of the waveforms must be almost 1e-{prec} times Max amplitude of the normalized waveform",
-			)
+                prec = 4
+                # RMS error should be less than 0.01 x Amax(wf1)
+                self.assertAlmostEqual(
+                    Res_p,
+                    0,
+                    prec,
+                    f"The RMS error between the + components of the waveforms must be atmost 1e-{prec} times Max amplitude of the normalized waveform",
+                )
+                self.assertAlmostEqual(
+                    Res_x,
+                    0,
+                    prec,
+                    f"The RMS error between the x components of the waveforms must be almost 1e-{prec} times Max amplitude of the normalized waveform",
+                )
 
-			prec = 0
-			# Max relative point-wise deviation w.r.t Amax(wf1) should be less than 1 (100)%
-			self.assertAlmostEqual(
-				np.absolute(Amin_p),
-				0,
-				prec,
-				f"The maximum lower deviation between the + components of the waveforms must be almost 1e-{prec}%",
-			)
-			self.assertAlmostEqual(
-				np.absolute(Amax_x),
-				0,
-				prec,
-				f"The maximum upper deviation between the x components of the waveforms must be almost 1e-{prec}%",
-			)
+                prec = 3
+                # Max relative point-wise deviation w.r.t Amax(wf1) should be less than 1 (100)%
+                self.assertAlmostEqual(
+                    np.absolute(Amin_p),
+                    0,
+                    prec,
+                    f"The maximum lower deviation between the + components of the waveforms must be almost 1e-{prec}%",
+                )
+                self.assertAlmostEqual(
+                    np.absolute(Amax_x),
+                    0,
+                    prec,
+                    f"The maximum upper deviation between the x components of the waveforms must be almost 1e-{prec}%",
+                )
 
-			self.assertAlmostEqual(
-				np.absolute(Amax_p),
-				0,
-				prec,
-				f"The maximum upper deviation between the + components of the waveforms must be almost 1e-{prec}",
-			)
-			self.assertAlmostEqual(
-				np.absolute(Amax_x),
-				0,
-				prec,
-				f"The maximum upper deviation between the x components of the waveforms must be almost 1e-{prec}",
-			)
+                self.assertAlmostEqual(
+                    np.absolute(Amax_p),
+                    0,
+                    prec,
+                    f"The maximum upper deviation between the + components of the waveforms must be almost 1e-{prec}",
+                )
+                self.assertAlmostEqual(
+                    np.absolute(Amax_x),
+                    0,
+                    prec,
+                    f"The maximum upper deviation between the x components of the waveforms must be almost 1e-{prec}",
+                )
 
-			prec = 1
-			# Mismatch should be less than 1e-3 or 1e-1 %
-			self.assertAlmostEqual(
-				mismatch_p,
-				0,
-				prec,
-				f"The mismatch between the + components of the waveforms must be atmost 1e-{prec}%",
-			)
-			self.assertAlmostEqual(
-				mismatch_x,
-				0,
-				prec,
-				f"The mismatch between the x components of the waveforms must be atmost 1e-{prec}%",
-			)
+                prec = 6
+                # Mismatch should be less than 1e-3 or 1e-1 %
+                self.assertAlmostEqual(
+                    mismatch_p,
+                    0,
+                    prec,
+                    f"The mismatch between the + components of the waveforms must be atmost 1e-{prec}%",
+                )
+                self.assertAlmostEqual(
+                    mismatch_x,
+                    0,
+                    prec,
+                    f"The mismatch between the x components of the waveforms must be atmost 1e-{prec}%",
+                )
 
-			# message(wf1_nrcat)
-			prec = 2
-			# Full arrays must agree pointwiswe
-			np.testing.assert_almost_equal(
-				np.array(wf1_nrcat),
-				np.array(wf2_lal),
-				prec,
-				f"The arrays must equal atleast upto {prec} decimals",
-			)
+                # message(wf1_nrcat)
+                prec = 6
+                # Full arrays must agree pointwiswe
+                np.testing.assert_almost_equal(
+                    np.array(wf1_nrcat),
+                    np.array(wf2_lal),
+                    prec,
+                    f"The arrays must equal atleast upto {prec} decimals",
+                )
 
-	if __name__ == "__main__":
-		unittest.main(argv=["first-arg-is-ignored"], exit=False, verbosity=3)
+    if __name__ == "__main__":
+        unittest.main(argv=["first-arg-is-ignored"], exit=False, verbosity=3)

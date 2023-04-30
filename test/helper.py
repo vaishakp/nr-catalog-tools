@@ -7,7 +7,7 @@ from inspect import getframeinfo, getmodule, stack
 import os
 
 
-def RMSerrs(func1, func2):
+def RMSerrs(func1, func2, Norm=False):
     """Compute and return the error estimates between two arrays
 
     Parameters
@@ -25,6 +25,11 @@ def RMSerrs(func1, func2):
            The max diff relative to A1max
     Amin : float the min diff relative to A2max
     """
+    # Normalize the waveforms wrt the first
+    n1 = np.linalg.norm(func1)
+    func1 = func1/n1
+    func2 = func2/n1
+
     A1max = np.amax(np.absolute(func1))
 
     diff = func1 - func2
