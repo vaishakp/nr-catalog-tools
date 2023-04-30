@@ -9,7 +9,6 @@ from . import utils
 
 
 class WaveformModes(sxs_WaveformModes):
-
     def __new__(
         cls,
         data,
@@ -83,8 +82,11 @@ class WaveformModes(sxs_WaveformModes):
         import quaternionic
         from scipy.interpolate import InterpolatedUnivariateSpline
         from scipy.stats import mode as stat_mode
-        from sxs.waveforms.nrar import (h, translate_data_type_to_spin_weight,
-                                        translate_data_type_to_sxs_string)
+        from sxs.waveforms.nrar import (
+            h,
+            translate_data_type_to_spin_weight,
+            translate_data_type_to_sxs_string,
+        )
 
         if type(file_path_or_open_file) == h5py._hl.files.File:
             h5_file = file_path_or_open_file
@@ -98,9 +100,8 @@ class WaveformModes(sxs_WaveformModes):
                 if utils.nr_group_tags[tag] in file_path_str:
                     nr_group = utils.nr_group_tags[tag]
         else:
-            raise RuntimeError(
-                f"Could not use or open {file_path_or_open_file}")
-        
+            raise RuntimeError(f"Could not use or open {file_path_or_open_file}")
+
         # Set the file path attribute
         cls._filepath = h5_file.filename
         cls._metadata = metadata
@@ -138,7 +139,8 @@ class WaveformModes(sxs_WaveformModes):
             raise RuntimeError(
                 f"We did not find even one mode in the file. Perhaps the "
                 f" format `amp_l?_m?` and `phase_l?_m?` is not the "
-                f"nomenclature of datagroups in the input file?")
+                f"nomenclature of datagroups in the input file?"
+            )
 
         times = np.arange(t_min, t_max + 0.5 * dt, dt)
         data = np.empty((len(times), len(LM)), dtype=complex)
@@ -155,9 +157,11 @@ class WaveformModes(sxs_WaveformModes):
         w_attributes["frame_type"] = "inertial"
         w_attributes["data_type"] = h
         w_attributes["spin_weight"] = translate_data_type_to_spin_weight(
-            w_attributes["data_type"])
+            w_attributes["data_type"]
+        )
         w_attributes["data_type"] = translate_data_type_to_sxs_string(
-            w_attributes["data_type"])
+            w_attributes["data_type"]
+        )
         w_attributes["r_is_scaled_out"] = True
         w_attributes["m_is_scaled_out"] = True
         # w_attributes["ells"] = ell_min, ell_max
@@ -175,12 +179,12 @@ class WaveformModes(sxs_WaveformModes):
 
     @property
     def filepath(self):
-        ''' Return the data file path '''
+        """Return the data file path"""
         return self._filepath
 
     @property
     def metadata(self):
-        ''' Return the metadata dictionary'''
+        """Return the metadata dictionary"""
         return self._metadata
 
     def get_mode(self, ell, em):
@@ -202,8 +206,7 @@ class WaveformModes(sxs_WaveformModes):
         # Get angles
         angles = self.get_angles(inclination, coa_phase, FRef, TRef)
 
-        polarizations = self.evaluate(
-            [angles["theta"], angles["psi"], angles["alpha"]])
+        polarizations = self.evaluate([angles["theta"], angles["psi"], angles["alpha"]])
 
         return polarizations
 
@@ -249,15 +252,14 @@ class WaveformModes(sxs_WaveformModes):
         if delta_t > 1.0 / 128:
             new_time = np.arange(min(self.time), max(self.time), delta_t)
         else:
-            new_time = np.arange(min(self.time), max(self.time),
-                                 delta_t / m_secs)
+            new_time = np.arange(min(self.time), max(self.time), delta_t / m_secs)
 
         # Get angles
         angles = self.get_angles(inclination, coa_phase, FRef, TRef)
 
-        h = self.interpolate(new_time).evaluate([
-            angles["theta"], angles["psi"], angles["alpha"]
-        ]) * utils.amp_to_physical(total_mass, distance)
+        h = self.interpolate(new_time).evaluate(
+            [angles["theta"], angles["psi"], angles["alpha"]]
+        ) * utils.amp_to_physical(total_mass, distance)
         h.time *= m_secs
         return self.to_pycbc(h)
 
@@ -286,9 +288,15 @@ class WaveformModes(sxs_WaveformModes):
 
         # Compute angles
         with h5py.File(self.filepath) as H5File:
-            #print(H5File.attrs.keys())
+            # print(H5File.attrs.keys())
             angles = GetNRToLALRotationAngles(
-                H5File=H5File, Metadata=self.metadata, inclination=inclination, PhiRef=coa_phase, FRef=FRef, TRef=TRef)
+                H5File=H5File,
+                Metadata=self.metadata,
+                inclination=inclination,
+                PhiRef=coa_phase,
+                FRef=FRef,
+                TRef=TRef,
+            )
 
         return angles
 

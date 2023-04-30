@@ -29,16 +29,18 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 from nrcatalogtools.sxs import SXSCatalog
+
 # from pycbc.waveform.utils import coalign_waveforms
 from pycbc import pnutils
 from pycbc.filter.matchedfilter import match
+
 # pycbc
 # from pycbc.waveform import td_approximants
 from pycbc.types.timeseries import TimeSeries
+
 # waveformtools
 from waveformtools.waveforms import modes_array
-from waveformtools.waveformtools import (interp_resam_wfs, message,
-                                         xtract_camp_phase)
+from waveformtools.waveformtools import interp_resam_wfs, message, xtract_camp_phase
 
 # unittest helper funcs
 from helper import *
@@ -88,7 +90,7 @@ def GetModesToCompare(ell, emm):
     wf1_tlm = sxsw.get_mode(ell, emm)[:, 0] - mtime
 
     if not (wf1_tlm - taxis1 == 0).all():
-        message('Difference in axis', wf1_tlm - taxis1)
+        message("Difference in axis", wf1_tlm - taxis1)
         raise ValueError("Time axis is different across modes!")
 
     # nrcat
