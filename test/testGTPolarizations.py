@@ -62,7 +62,7 @@ message(f"Simulation {sim_name}")
 ######################################
 
 
-def GetPolarizations(M, D, inclination, coa_phase, delta_t):
+def GetPolarizations(M, D, inclination, coa_phase, delta_t, Plot=False, FRef=None):
     """Get the polarizations from extrinsic 
     parameters.
 
@@ -86,6 +86,21 @@ def GetPolarizations(M, D, inclination, coa_phase, delta_t):
     hp, hx : 1d array
              The waveform polarizations
     """
+    #############################
+    # Reference frequency
+    #############################
+
+    G = 6.6743e-11
+    c = 3e8
+    Msun = 1.9891e30
+    TMSUN = (G*Msun/c**3)
+    
+    # Extrinsic parameters:
+    f_lower_at_1MSUN = 0.09132/(2*np.pi)
+
+    #f_lower = f_lower_at_1MSUN/(M*TMSUN)
+    f_lower = 1
+    message(f'f_lower_at_1MSUN {f_lower_at_1MSUN} \n f_lower {f_lower}')
 
     ###############################
     # Prepare waveform using nrcat
@@ -130,10 +145,7 @@ def GetPolarizations(M, D, inclination, coa_phase, delta_t):
     except:
         pass
 
-    # Extrinsic parameters:
-    f_lower = 20
-    f_lower_at_1MSUN = f_lower/M
-
+    
     f = h5py.File(dfile, 'a')
     if 'f_lower_at_1MSUN' not in list(f.attrs.keys()):
         
@@ -227,29 +239,34 @@ def GetPolarizations(M, D, inclination, coa_phase, delta_t):
     maxtime = t2[np.argmax(np.absolute(hp2+1j*hx2))]
     t2 = t2 - maxtime
     
-    #pyplot.figure()
-    plt.plot(t1, hp1, color=[0,0.7071,1], label='nrcat')
-    plt.plot(t2, hp2, color=[0.1,0,0], linestyle='--', label='lal')
-    plt.title(f"M={M} D={D} incl={inclination}, phi_ref={coa_phase} delta_t{delta_t}")
-    plt.legend()
-    plt.grid()
-    plt.show()
-    
+    n1p = np.linalg.norm(hp1)
+    n1x = np.linalg.norm(hx1)
 
-    plt.plot(t1, hx1, color=[0,0.7071,1], label='nrcat')
-    plt.plot(t2, hx2, color=[0.1,0,0], linestyle='--', label='lal')
-    plt.legend()
-    plt.grid()
-    plt.show()
+    if Plot:
+        plt.plot(t1, hp1/n1p, color=[0,0.7071,1], label='nrcat +')
+        plt.plot(t2, hp2/n1p, color=[0.1,0,0], linestyle='--', label='lal +')
+        plt.plot(t1, hx1/n1x, color='magenta', label='nrcat x')
+        plt.plot(t2, hx2/n1x, color='cyan', linestyle='--', label='lal x')
+        plt.title(f"M={M} D={D} incl={inclination}, phi_ref={coa_phase} delta_t{delta_t}")
+        plt.legend()
+        plt.grid()
+        plt.show()
+        
 
-    fig, ax = plt.subplots()
-    ax.set_yscale('log')
+        #plt.plot(t1, hx1/n1x, color=[0,0.7071,1], label='nrcat')
+        #plt.plot(t2, hx2/n1x, color=[0.1,0,0], linestyle='--', label='lal')
+        #plt.legend()
+        #plt.grid()
+        #plt.show()
 
-    ax.plot(t1, np.absolute(hp1-hp2), color=[0,0.7071,1], label='plus')
-    ax.plot(t2, np.absolute(hx1- hx2), color=[0.1,0,0], linestyle='--', label='cross')
-    ax.legend()
-    plt.grid()
-    plt.show()
+        fig, ax = plt.subplots()
+        ax.set_yscale('log')
+
+        ax.plot(t1, np.absolute(hp1-hp2)/n1p, color=[0,0.7071,1], label='plus')
+        ax.plot(t2, np.absolute(hx1- hx2)/n1x, color=[0.1,0,0], linestyle='--', label='cross')
+        ax.legend()
+        plt.grid()
+        plt.show()
 
 
     
@@ -267,6 +284,11 @@ def GetPolarizations(M, D, inclination, coa_phase, delta_t):
         "wf2x": hx2,
     }
 
+    from waveformtools.waveformtools import match_wfs
+
+    match_details = match_wfs([np.array(t1), np.array(t2)], [np.array(hp1), np.array(hp2)])
+    #print(match_details['time shift'], match_details['phase shift'])
+    
     return waveforms
 
 
@@ -278,9 +300,10 @@ class TestGTPol(unittest.TestCase):
         maximum deviation and mismatches
         """
 
+        #incl_angles = [0.3]
         incl_angles = [0.001, 0.3, np.pi/8, np.pi/6, np.pi/4, np.pi/2, np.pi-0.001]
-        #phi_ref_angles = [0.001, 0.3, np.pi/8, np.pi/6, np.pi/4, np.pi/2, np.pi-0.001]
-        phi_ref_angles = [np.pi/2] 
+        phi_ref_angles = [0.001, 0.3, np.pi/8, np.pi/6, np.pi/4, np.pi/2, np.pi-0.001]
+        #phi_ref_angles = [0] 
         # Parameters
         M = 40
         D = 1000
@@ -296,7 +319,7 @@ class TestGTPol(unittest.TestCase):
                 message(f" M={M} D={D} incl={inclination}, phi_ref={phi_ref} delta_t{delta_t}")
                 message("----------------------------")
 
-                waveforms = GetPolarizations(M, D, inclination, phi_ref, delta_t)
+                waveforms = GetPolarizations(M, D, inclination, phi_ref, delta_t, Plot=False)
 
                 wf1_p = waveforms["wf1p"]
                 wf1_x = waveforms["wf1x"]

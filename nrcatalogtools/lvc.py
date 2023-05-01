@@ -832,15 +832,17 @@ def GetNRToLALRotationAngles(
     # the choice will be cancelled out by alpha correction (I hope!)
 
     # If theta is very close to the poles
+    # psi is degenerate.
     # return a random value
-    if abs(z_wave_z - 1.0) < 0.000001:
+    if abs(z_wave_z - 1.0) < 1e-6:
         psi = 0.5
 
     else:
-        # psi can run between 0 and 2pi, but only one solution works for x and y */
-        # Possible numerical issues if z_wave_x = sin(theta) */
+        # psi can run between 0 and 2pi, but only one solution works for x and y
+        # Possible numerical issues if z_wave_x = sin(theta)
         if abs(z_wave_x / np.sin(theta)) > 1.0:
-            if abs(z_wave_x / np.sin(theta)) < 1.00001:
+            # Possible numerical underflow?
+            if abs(z_wave_x / np.sin(theta)) < (1 +1e-5):
                 if (z_wave_x * np.sin(theta)) < 0.0:
                     psi = np.pi  # LAL_PI
 
@@ -855,6 +857,7 @@ def GetNRToLALRotationAngles(
                 )
 
         else:
+            # Equation 41 of arxiv:1703.01076
             psi = np.arccos(z_wave_x / np.sin(theta))
 
         y_val = np.sin(psi) * np.sin(theta)
@@ -889,6 +892,8 @@ def GetNRToLALRotationAngles(
     psi_hat = np.array([psi_hat_x, psi_hat_y, psi_hat_z])
 
     # Step 4: Compute sin(alpha) and cos(alpha)
+    # Rotation angles on the tangent plane
+    # due to spin weight.
     n_dot_theta = np.dot(n_hat, theta_hat)
     ln_cross_n_dot_theta = np.dot(ln_cross_n, theta_hat)
     n_dot_psi = np.dot(n_hat, psi_hat)
