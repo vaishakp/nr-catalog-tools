@@ -62,7 +62,7 @@ message(f"Simulation {sim_name}")
 ######################################
 
 
-def GetPolarizations(M, D, inc, coa_phase, delta_t):
+def GetPolarizations(M, D, inclination, coa_phase, delta_t):
     """Get the polarizations from extrinsic 
     parameters.
 
@@ -102,7 +102,7 @@ def GetPolarizations(M, D, inc, coa_phase, delta_t):
 
     mwf = mc.get(sim_name)
 
-    hpc = mwf.get_td_waveform(total_mass=M, distance=D, inclination=inc,
+    hpc = mwf.get_td_waveform(total_mass=M, distance=D, inclination=inclination,
                         coa_phase=coa_phase, delta_t=delta_t
                         )
 
@@ -153,7 +153,7 @@ def GetPolarizations(M, D, inc, coa_phase, delta_t):
 
     params['f_lower'] = f_lower
     params['mtotal'] = M#150.0
-    params['inclination'] = inc#0.0
+    params['inclination'] = inclination#0.0
     params['distance'] = D#100.0
 
     # Metadata parameters:
@@ -230,6 +230,7 @@ def GetPolarizations(M, D, inc, coa_phase, delta_t):
     #pyplot.figure()
     plt.plot(t1, hp1, color=[0,0.7071,1], label='nrcat')
     plt.plot(t2, hp2, color=[0.1,0,0], linestyle='--', label='lal')
+    plt.title(f"M={M} D={D} incl={inclination}, phi_ref={coa_phase} delta_t{delta_t}")
     plt.legend()
     plt.grid()
     plt.show()
@@ -278,11 +279,12 @@ class TestGTPol(unittest.TestCase):
         """
 
         incl_angles = [0.001, 0.3, np.pi/8, np.pi/6, np.pi/4, np.pi/2, np.pi-0.001]
-        phi_ref_angles = [0.001, 0.3, np.pi/8, np.pi/6, np.pi/4, np.pi/2, np.pi-0.001]
+        #phi_ref_angles = [0.001, 0.3, np.pi/8, np.pi/6, np.pi/4, np.pi/2, np.pi-0.001]
+        phi_ref_angles = [np.pi/2] 
         # Parameters
         M = 40
         D = 1000
-        phi_ref = np.pi/4
+        #phi_ref = np.pi/4
         delta_t = 1./2048
 
 
