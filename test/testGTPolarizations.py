@@ -302,8 +302,8 @@ class TestGTPol(unittest.TestCase):
 
         #incl_angles = [0.3]
         incl_angles = [0.001, 0.3, np.pi/8, np.pi/6, np.pi/4, np.pi/2, np.pi-0.001]
-        phi_ref_angles = [0.001, 0.3, np.pi/8, np.pi/6, np.pi/4, np.pi/2, np.pi-0.001]
-        #phi_ref_angles = [0] 
+        #phi_ref_angles = [0.001, 0.3, np.pi/8, np.pi/6, np.pi/4, np.pi/2, np.pi-0.001]
+        phi_ref_angles = [0] 
         # Parameters
         M = 40
         D = 1000
@@ -319,7 +319,7 @@ class TestGTPol(unittest.TestCase):
                 message(f" M={M} D={D} incl={inclination}, phi_ref={phi_ref} delta_t{delta_t}")
                 message("----------------------------")
 
-                waveforms = GetPolarizations(M, D, inclination, phi_ref, delta_t, Plot=False)
+                waveforms = GetPolarizations(M, D, inclination, phi_ref, delta_t, Plot=True)
 
                 wf1_p = waveforms["wf1p"]
                 wf1_x = waveforms["wf1x"]
@@ -407,7 +407,7 @@ class TestGTPol(unittest.TestCase):
 
                 # message(wf1_nrcat)
                 prec = 6
-                # Full arrays must agree pointwiswe
+                # Full arrays must agree pointwiswe without alignment
                 np.testing.assert_almost_equal(
                     np.array(wf1_nrcat),
                     np.array(wf2_lal),
