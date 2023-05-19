@@ -273,7 +273,7 @@ class TestSXSModes(unittest.TestCase):
             message(f"Mode l{ell}m{emm}")
             message("--------------------------")
 
-            waveforms = GetModesToCompare(ell, emm, Plot=True)
+            waveforms = GetModesToCompare(ell, emm, Plot=False)
 
             wf1_p = waveforms["wf1p"]
             wf1_x = waveforms["wf1x"]
