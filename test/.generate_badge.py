@@ -5,7 +5,7 @@ cov = coverage()
 cov.load()
 total_cov = cov.report()
 
-badge = Image.new("RGB", (140, 60))
+badge = Image.new("RGB", (120, 20))
 font = ImageFont.load_default()
 
 bd = ImageDraw.Draw(badge)
