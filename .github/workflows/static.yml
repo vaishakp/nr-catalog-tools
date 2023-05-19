@@ -38,8 +38,8 @@ jobs:
         with:
           # Upload select paths
           path: |
-            'test/**/*.html'
-            'test/*.jpg'
+            'test/htmlcov'
+            'test/badge.jpg'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v2
