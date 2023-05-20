@@ -1,4 +1,4 @@
-[![Code coverage](docs/cov_badge.svg)](https://vaishakp.github.io/nr-catalog-tools/)
+[![Code coverage](https://github.com/vaishakp/nr-catalog-tools/blob/py_test_cov/docs/cov_badge.jpg)](https://vaishakp.github.io/nr-catalog-tools/)
 
 # Interface to Numerical Relativity Catalogs
 
