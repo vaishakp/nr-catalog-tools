@@ -1,6 +1,6 @@
 import os
 from abc import ABC, abstractmethod
-from sxs import Catalog as sxs_Catalog
+import sxs
 from nrcatalogtools import waveform
 from nrcatalogtools import metadata as md
 
@@ -51,9 +51,10 @@ class CatalogABC(ABC):
         raise NotImplementedError()
 
 
-class CatalogBase(CatalogABC, sxs_Catalog):
+class CatalogBase(CatalogABC):
     def __init__(self, *args, **kwargs) -> None:
-        sxs_Catalog.__init__(self, *args, **kwargs)
+        #sxs_Catalog.__init__(self, *args, **kwargs)
+        self.simulations = sxs.load('simulations')
 
     @property
     def simulations_list(self):
@@ -129,13 +130,12 @@ class CatalogBase(CatalogABC, sxs_Catalog):
         Returns:
             `sxs.metadata.metadata.Metadata`: Metadata as dictionary
         """
-        sim_dict = self.simulations
-        if sim_name not in list(sim_dict.keys()):
+        if sim_name not in self.simulations_list:
             raise IOError(
                 f"Simulation {sim_name} not found in catalog."
                 f"Please check that it exists"
             )
-        return sim_dict[sim_name]
+        return sxs.load(sim_name).metadata
 
     def set_attribute_in_waveform_data_file(self, sim_name, attr_name, attr_value):
         """Set attributes in the HDF5 file holding waveform data for a given

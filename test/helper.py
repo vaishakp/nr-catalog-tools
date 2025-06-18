@@ -7,14 +7,14 @@ from inspect import getframeinfo, stack
 
 import numpy as np
 
-import config
+import vlconf
 
 
 def message(
     *args,
     message_verbosity=2,
-    print_verbosity=config.print_verbosity,
-    log_verbosity=config.log_verbosity,
+    print_verbosity=vlconf.print_verbosity,
+    log_verbosity=vlconf.log_verbosity,
     **kwargs
 ):
     """The print function with verbosity levels and logging facility.
